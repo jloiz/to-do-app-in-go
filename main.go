@@ -1,7 +1,11 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/jloiz/to-do-app-in-go/greeting"
+)
 
 func main(){
-	fmt.Println("Hello, World!")
+	fmt.Println("Welcome,",  greeting.GreetUser())
 }
