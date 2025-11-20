@@ -3,26 +3,35 @@ package main
 import (
 	"fmt"
 
-	"github.com/jloiz/to-do-app-in-go/greeting"
 	"github.com/gofiber/fiber/v2"
+	"github.com/jloiz/to-do-app-in-go/greeting"
 )
 
-func main(){
-
+func makeGreeting() string {
 	user := greeting.GreetUser()
+	var greetingStr string
+	greetingStr = "Welcome " + user + ", getting your tasks."
+	return greetingStr
+}
 
-	var greetingStr string;
-	
-	greetingStr =  "Welcome " +  user + ", getting your tasks."
+func setupRoutes(app *fiber.App) {
+	// Health 
+	app.Get("/", initialise)
+}
 
-	fmt.Println(greetingStr)
+// ToDo: Move route handlers to their own gomod
+func initialise(c *fiber.Ctx) error {
+	greeting := makeGreeting()
+	return c.SendString(greeting)
+}
+
+func main() {
+
+	greeting := makeGreeting()
+	fmt.Println(greeting)
 
 	app := fiber.New()
-
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString(greetingStr)
-	})
-
+	setupRoutes(app)
 	app.Listen(":3000")
 
 }
