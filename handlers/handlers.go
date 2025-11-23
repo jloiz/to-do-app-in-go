@@ -1,20 +1,28 @@
 package handlers
 
-import(
-	"to-do-app-in-go/greeting"
+import (
 	"github.com/gofiber/fiber/v2"
-
 )
 
-func MakeGreeting() string {
-	user := greeting.GreetUser()
+func Greeting() string {
 	var greetingStr string
-	greetingStr = "Welcome " + user + ", getting your tasks."
+	greetingStr = "Welcome, getting your tasks."
 	return greetingStr
 }
 
-// ToDo: Move route handlers to their own gomod
 func Initialise(c *fiber.Ctx) error {
-	greeting := MakeGreeting()
+	greeting := Greeting()
 	return c.SendString(greeting)
+}
+
+func Initialise2(c *fiber.Ctx) error {
+	greeting := Greeting()
+	return c.SendString(greeting)
+}
+
+//ToDo: Should I move todo app items to own package?
+// After made all endpoints, jsonify the default and send
+
+func GetAllTasks(c *fiber.Ctx) error {
+	return c.SendString("All tasks")
 }
