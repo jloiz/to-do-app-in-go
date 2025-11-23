@@ -1,1 +1,4 @@
 to-do-app-in-go.exe
+*~
+*.swp
+*.swo
