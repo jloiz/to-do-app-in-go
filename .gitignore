@@ -1,4 +1,5 @@
 to-do-app-in-go.exe
+.env
 *~
 *.swp
 *.swo
