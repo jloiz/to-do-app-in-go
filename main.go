@@ -10,7 +10,7 @@ import (
 
 func main() {
 	connectionStatus := db.ConnectToDb()
-	fmt.Printf("Connection: %s", connectionStatus)
+	fmt.Printf("Connection: %t \n", connectionStatus)
 
 	app := fiber.New()
 	routes.SetupRoutes(app)
