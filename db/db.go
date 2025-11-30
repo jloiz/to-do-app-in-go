@@ -1,18 +1,22 @@
 package db
 
 import (
+	"database/sql"
+	"fmt"
 	"log"
 	"os"
-	"fmt"
-	"database/sql"
-	_"github.com/lib/pq"
 
 	"github.com/joho/godotenv"
+	_"github.com/lib/pq"
+
+	tps "to-do-app-in-go/types"
 )
+
+// Global database connection ptr
+var dbConn *sql.DB
 
 func getEnvVariable(key string) string {
 	err := godotenv.Load(".env")
-
 	if err != nil {
 		log.Fatalf("Unable to fetch environment variable: %s", key)
 	}
@@ -23,32 +27,68 @@ func getEnvVariable(key string) string {
 func ConnectToDb() bool {
 	variables := [5]string{"HOST", "PORT", "USER", "PASSWORD", "DBNAME"}
 	envVarMap := make(map[string]string)
-	
-	for _,envVar := range variables {
+
+	for _, envVar := range variables {
 		buff := getEnvVariable(envVar)
 		envVarMap[envVar] = buff
 	}
 
-	connectionStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", envVarMap["HOST"], envVarMap["PORT"], envVarMap["USER"], envVarMap["PASSWORD"], envVarMap["DBNAME"])  
-
-	db, err := sql.Open("postgres", connectionStr)
+	connectionStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", envVarMap["HOST"], envVarMap["PORT"], envVarMap["USER"], envVarMap["PASSWORD"], envVarMap["DBNAME"])
+	var err error;
+	dbConn, err = sql.Open("postgres", connectionStr)
 	if err != nil {
 		panic(err)
 	}
-	defer db.Close()
-
-	err = db.Ping()
-
-	var isConnected bool;
+	// ToDo: Find where to close
+	//defer db.Close()
+	err = dbConn.Ping()
+	var isConnected bool
 
 	if err != nil {
-		panic(err)
 		isConnected = false
+		panic(err)
 	} else {
 		isConnected = true
 	}
 
 	fmt.Printf("Connected to database successfully\n")
 
-	return isConnected 
+	return isConnected
+}
+
+func RuncDbWrite(command string) {
+	_, err := dbConn.Exec(command)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func DbReadRow(taskId string) {
+	var task tps.Task
+	queryTemplate := "SELECT task_id, task_body, status FROM tasks WHERE task_id=$1"
+	row := dbConn.QueryRow(queryTemplate, taskId)
+	err := row.Scan(&task.TaskId, &task.TaskBody, &task.Status)
+
+	switch err {
+	case sql.ErrNoRows:
+		// ToDo: Return a null task back and use to give http err
+		fmt.Printf("No task with %s found", taskId)
+	case nil: 
+		// ToDo return back to http server
+		fmt.Println(task)
+	default:
+		panic(err)
+	}
+
+}
+
+func DbRead(command string) *sql.Rows {
+	rows, err := dbConn.Query(command)
+	if err != nil {
+		panic(err)
+		// may need to rethink for not found for successful write
+		// Or probably just set postgres col as primary key as more realistic tbh
+	}
+	defer fmt.Sprint(rows)
+	return rows
 }

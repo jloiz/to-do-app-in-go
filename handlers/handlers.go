@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"to-do-app-in-go/db"
 )
 
 func Greeting() string {
@@ -15,16 +17,21 @@ func Initialise(c *fiber.Ctx) error {
 	return c.SendString(greeting)
 }
 
-//ToDo: Should I move todo app items to own package?
 // After made all endpoints, jsonify the default and send
 
 func GetAllTasks(c *fiber.Ctx) error {
+	queryStr := "SELECT * FROM tasks"
+	result := db.DbRead(queryStr)
+	fmt.Sprint(result)
 	return c.SendString("All tasks")
+
 }
 
 func GetTask(c *fiber.Ctx) error {
-	msg := "A single task " + c.Params("task");
-	return c.SendString(msg);
+	// Do some http side checking of validity of id provided
+	db.DbReadRow(c.Params("task"))
+	msg := "A single task " + c.Params("task")
+	return c.JSON(msg)
 }
 
 func UpdateTask(c *fiber.Ctx) error {
@@ -32,6 +39,8 @@ func UpdateTask(c *fiber.Ctx) error {
 }
 
 func NewTask(c *fiber.Ctx) error {
+	// This one need a select first to check the id does not
+	// already exisit
 	return c.SendString("New Task")
 }
 
