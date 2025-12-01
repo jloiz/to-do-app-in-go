@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"to-do-app-in-go/db"
+	tps "to-do-app-in-go/types"
 )
 
 func Greeting() string {
@@ -17,21 +18,26 @@ func Initialise(c *fiber.Ctx) error {
 	return c.SendString(greeting)
 }
 
-// After made all endpoints, jsonify the default and send
-
 func GetAllTasks(c *fiber.Ctx) error {
 	queryStr := "SELECT * FROM tasks"
 	result := db.DbRead(queryStr)
 	fmt.Sprint(result)
 	return c.SendString("All tasks")
-
 }
 
 func GetTask(c *fiber.Ctx) error {
-	// Do some http side checking of validity of id provided
-	db.DbReadRow(c.Params("task"))
-	msg := "A single task " + c.Params("task")
-	return c.JSON(msg)
+	// ToDo: Do some http side checking of validity of id provided
+	dbRes := db.DbReadRow(c.Params("task"))
+	if dbRes.TaskId != 0 {
+		return c.JSON(dbRes)
+	} else {
+		// Define here so only use mem if an error 
+		var  dbError tps.ErrorRes
+		dbError.Error = fmt.Sprintf("No record of task with ID %s found", c.Params("task"))
+
+		return c.JSON(dbError)
+	}
+
 }
 
 func UpdateTask(c *fiber.Ctx) error {

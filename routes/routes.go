@@ -2,7 +2,6 @@ package routes
 
 import (
 	"to-do-app-in-go/handlers"
-
 	"github.com/gofiber/fiber/v2"
 )
 

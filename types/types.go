@@ -5,3 +5,7 @@ type Task struct {
 	TaskBody string
 	Status   string
 }
+
+type ErrorRes struct {
+	Error string
+}

@@ -63,23 +63,24 @@ func RuncDbWrite(command string) {
 	}
 }
 
-func DbReadRow(taskId string) {
+func DbReadRow(taskId string) tps.Task {
 	var task tps.Task
+	var noRes tps.Task
+
 	queryTemplate := "SELECT task_id, task_body, status FROM tasks WHERE task_id=$1"
 	row := dbConn.QueryRow(queryTemplate, taskId)
 	err := row.Scan(&task.TaskId, &task.TaskBody, &task.Status)
-
+    
 	switch err {
 	case sql.ErrNoRows:
-		// ToDo: Return a null task back and use to give http err
-		fmt.Printf("No task with %s found", taskId)
+		fmt.Printf("No task with %s found \n", taskId)
+		return noRes
 	case nil: 
-		// ToDo return back to http server
-		fmt.Println(task)
+		// Success case
+		return task
 	default:
 		panic(err)
 	}
-
 }
 
 func DbRead(command string) *sql.Rows {
