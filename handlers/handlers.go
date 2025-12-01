@@ -19,6 +19,8 @@ func Initialise(c *fiber.Ctx) error {
 }
 
 func GetAllTasks(c *fiber.Ctx) error {
+
+	// This one is broken
 	queryStr := "SELECT * FROM tasks"
 	result := db.DbRead(queryStr)
 	fmt.Sprint(result)
@@ -26,7 +28,6 @@ func GetAllTasks(c *fiber.Ctx) error {
 }
 
 func GetTask(c *fiber.Ctx) error {
-	// ToDo: Do some http side checking of validity of id provided
 	dbRes := db.DbReadRow(c.Params("task"))
 	if dbRes.TaskId != 0 {
 		return c.JSON(dbRes)
@@ -35,9 +36,8 @@ func GetTask(c *fiber.Ctx) error {
 		var  dbError tps.ErrorRes
 		dbError.Error = fmt.Sprintf("No record of task with ID %s found", c.Params("task"))
 
-		return c.JSON(dbError)
+		return c.Status(400).JSON(dbError)
 	}
-
 }
 
 func UpdateTask(c *fiber.Ctx) error {
@@ -45,6 +45,8 @@ func UpdateTask(c *fiber.Ctx) error {
 }
 
 func NewTask(c *fiber.Ctx) error {
+	// ToDo: gen a random id, check not used, consume only body and status and return id
+	// could do db autoincrement but this may be overkill?
 	// This one need a select first to check the id does not
 	// already exisit
 	return c.SendString("New Task")

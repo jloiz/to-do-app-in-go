@@ -1,11 +1,11 @@
 package types
 
 type Task struct {
-	TaskId   int
-	TaskBody string
-	Status   string
+	TaskId   int     `json:"taskId"`
+	TaskBody string  `json:"taskBody"`
+	Status   string  `json:"status"`
 }
 
 type ErrorRes struct {
-	Error string
+	Error string `json:"error"`
 }
