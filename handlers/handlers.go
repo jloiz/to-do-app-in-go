@@ -29,7 +29,7 @@ func GetAllTasks(c *fiber.Ctx) error {
 
 func GetTask(c *fiber.Ctx) error {
 	dbRes := db.DbReadRow(c.Params("task"))
-	if dbRes.TaskId != 0 {
+	if dbRes.TaskId != "" {
 		return c.JSON(dbRes)
 	} else {
 		// Define here so only use mem if an error 
@@ -45,10 +45,7 @@ func UpdateTask(c *fiber.Ctx) error {
 }
 
 func NewTask(c *fiber.Ctx) error {
-	// ToDo: gen a random id, check not used, consume only body and status and return id
-	// could do db autoincrement but this may be overkill?
-	// This one need a select first to check the id does not
-	// already exisit
+	// Use UUID
 	return c.SendString("New Task")
 }
 

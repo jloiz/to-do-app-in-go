@@ -56,11 +56,20 @@ func ConnectToDb() bool {
 	return isConnected
 }
 
-func RuncDbWrite(command string) {
+func dbWrite(command string) string {
 	_, err := dbConn.Exec(command)
 	if err != nil {
 		panic(err)
 	}
+	// ToDo: Change to switch statement and get data from post
+	msg := "New task write process successful"
+	return msg
+}
+
+func DbCreateTask(newTask tps.Task) string {
+	writeCommand := fmt.Sprintf("INSERT into tasks (task_id, task_body, status) values (uuid_generate_v4(), %s, %s);", newTask.TaskBody, newTask.Status)
+	response := dbWrite(writeCommand)
+	return response
 }
 
 func DbReadRow(taskId string) tps.Task {

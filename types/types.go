@@ -1,7 +1,7 @@
 package types
 
 type Task struct {
-	TaskId   int     `json:"taskId"`
+	TaskId   string     `json:"taskId"`
 	TaskBody string  `json:"taskBody"`
 	Status   string  `json:"status"`
 }
