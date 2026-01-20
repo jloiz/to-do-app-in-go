@@ -45,8 +45,16 @@ func UpdateTask(c *fiber.Ctx) error {
 }
 
 func NewTask(c *fiber.Ctx) error {
-	// Use UUID
-	return c.SendString("New Task")
+	taskReq := c.Body()
+	testVal := fmt.Sprintf("%s", taskReq)
+	fmt.Printf("Recieved write request for task: \n %s", testVal)
+	// ToDo: Got here, JSONisfy and validate type conformity. Throw err is not matched
+	//newTask, err := taskReq.json()
+	//var task tps.Task;
+
+	// resp := db.DbCreateTask(task)
+	resp := "test"
+	return c.SendString(resp)
 }
 
 func DeleteTask(c *fiber.Ctx) error {
