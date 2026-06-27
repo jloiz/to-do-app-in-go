@@ -57,18 +57,31 @@ func ConnectToDb() bool {
 }
 
 func dbWrite(command string) string {
-	_, err := dbConn.Exec(command)
+	 // Define the recovery block for bad database writes
+	 var msg string;
+	 defer func() {
+		if r:= recover(); r != nil {
+			msg = fmt.Sprintf("\nDatabase write failed: %v", r)
+			fmt.Printf("%s", msg)
+		}
+	 }() 
+
+	resp, err := dbConn.Exec(command)
 	if err != nil {
 		panic(err)
 	}
+	fmt.Printf("%s", resp)
 	// ToDo: Change to switch statement and get data from post
-	msg := "New task write process successful"
+	msg = "New task write process successful"
 	return msg
 }
 
-func DbCreateTask(newTask tps.Task) string {
+func DbCreateTask(newTask tps.TaskRequest) string {
+	//ToDo: add the quotes arount the values
 	writeCommand := fmt.Sprintf("INSERT into tasks (task_id, task_body, status) values (uuid_generate_v4(), %s, %s);", newTask.TaskBody, newTask.Status)
+	fmt.Printf("%s", writeCommand)
 	response := dbWrite(writeCommand)
+	fmt.Printf("%+v", response);
 	return response
 }
 

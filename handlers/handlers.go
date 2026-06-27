@@ -63,8 +63,8 @@ func NewTask(c *fiber.Ctx) error {
 	if err == nil {
 		var newTaskResponse tps.SuccessResponse
 		fmt.Printf("Create new task: %+v\n", newTask)
-		
-		// db.DbCreateTask(newTask);
+		// Need to add exception return for a bad db write
+		db.DbCreateTask(newTask);
 		newTaskResponse.TaskId = "Successfully wrote new task" // Todo: change to id of task
 		return c.Status(200).JSON(newTaskResponse)
 	}
@@ -74,9 +74,9 @@ func NewTask(c *fiber.Ctx) error {
 		errorResponse.Error = "Unexcpected error parsing new task"
 		return c.Status(500).JSON(errorResponse)
 	}
-	var errorResposne tps.ErrorResponse;
-	errorResposne.Error = "Unexcpected error writing new task"
-	return c.Status(500).JSON(errorResposne)
+	var errorResponse tps.ErrorResponse;
+	errorResponse.Error = "Unexcpected error writing new task"
+	return c.Status(500).JSON(errorResponse)
 }
 
 func DeleteTask(c *fiber.Ctx) error {
