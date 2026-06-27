@@ -7,3 +7,8 @@ Utilitises:
 - lib/pq
 - gofiber
 - database/sql
+
+## To Run
+
+- Install a postgres instance
+- Define credentials in .env

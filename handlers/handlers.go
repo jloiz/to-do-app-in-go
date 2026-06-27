@@ -2,9 +2,11 @@ package handlers
 
 import (
 	"fmt"
-	"github.com/gofiber/fiber/v2"
 	"to-do-app-in-go/db"
 	tps "to-do-app-in-go/types"
+
+	"github.com/gofiber/fiber/v2"
+	"encoding/json"
 )
 
 func Greeting() string {
@@ -46,14 +48,24 @@ func UpdateTask(c *fiber.Ctx) error {
 
 func NewTask(c *fiber.Ctx) error {
 	taskReq := c.Body()
-	testVal := fmt.Sprintf("%s", taskReq)
-	fmt.Printf("Recieved write request for task: \n %s", testVal)
+	taskReqStr := fmt.Sprintf("%s", taskReq)
+	fmt.Printf("Recieved write request for task: \n %s", taskReqStr)
 	// ToDo: Got here, JSONisfy and validate type conformity. Throw err is not matched
-	//newTask, err := taskReq.json()
-	//var task tps.Task;
-
-	// resp := db.DbCreateTask(task)
-	resp := "test"
+	var resp string;
+	
+	var newTask tps.TaskRequest;
+	err := json.Unmarshal([]byte(taskReq), &newTask) 
+	if err == nil {
+		fmt.Printf("Create new task: %+v\n", newTask)
+		resp = "Success"
+		// db.DbCreateTask(newTask);
+	}
+	if err != nil {
+		//panic("Error recieving JSON from task")
+		fmt.Printf("Invalid format for new task. New tasks must contain taskBody and status only.")
+		// Change to proper respnse types with err
+		resp = "failure"		
+	}
 	return c.SendString(resp)
 }
 
