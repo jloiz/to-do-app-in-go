@@ -6,11 +6,21 @@ type Task struct {
 	Status   string     `json:"status"`
 }
 
-type ErrorRes struct {
-	Error string `json:"error"`
-}
-
 type TaskRequest struct {
 	TaskBody string  `json:"taskBody"`
 	Status   string  `json:"status"`
 }
+
+type SuccessResponse struct {
+	TaskId string `json:"taskId"`
+}
+
+type ErrorResponse struct {
+	Error string `json:"error"`
+}
+
+// type WriteTaskResponse struct {
+// 	// ToDo: change to versionedUUid/UUid
+// 	TaskID string `json:"taskId,omitempty"`
+// 	Error string `json:"error,omitempty"`
+// }
