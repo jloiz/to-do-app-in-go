@@ -15,3 +15,4 @@ Utilitises:
 
 ## ToDo:
 - Add shell scirpt to configure postgres and .env for client
+- Add proper logger

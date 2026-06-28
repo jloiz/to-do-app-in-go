@@ -55,9 +55,10 @@ func NewTask(c *fiber.Ctx) error {
 	// ToDo: Need to add request validation here
 
 	taskReqStr := fmt.Sprintf("%s", taskReq)
-	fmt.Printf("Recieved write request for task: \n %s", taskReqStr)
+	fmt.Printf("Recieved write request for task: \n %s\n", taskReqStr)
 
 	var newTask tps.TaskRequest
+	var taskId string;
 
 	err := json.Unmarshal([]byte(taskReq), &newTask)
 
@@ -70,12 +71,12 @@ func NewTask(c *fiber.Ctx) error {
 
 	var newTaskResponse tps.WriteTaskResponse
 	fmt.Printf("Create new task: %+v\n", newTask)
-	err = db.DbCreateTask(newTask)
+	taskId, err = db.DbCreateTask(newTask)
 	if err != nil {
 		newTaskResponse.Error = fmt.Sprintf("Failed to write to database with error: %s\n", err)
 		return c.Status(503).JSON(newTaskResponse)
 	}
-	newTaskResponse.TaskId = "Successfully wrote new task" // Todo: change to id of task
+	newTaskResponse.TaskId = taskId // Todo: change to id of task
 	return c.Status(200).JSON(newTaskResponse)
 
 }

@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
-	_"github.com/lib/pq"
+	_ "github.com/lib/pq"
 
 	tps "to-do-app-in-go/types"
 )
@@ -35,7 +35,7 @@ func ConnectToDb() bool {
 	}
 
 	connectionStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", envVarMap["HOST"], envVarMap["PORT"], envVarMap["USER"], envVarMap["PASSWORD"], envVarMap["DBNAME"])
-	var err error;
+	var err error
 	dbConn, err = sql.Open("postgres", connectionStr)
 	if err != nil {
 		panic(err)
@@ -57,31 +57,31 @@ func ConnectToDb() bool {
 	return isConnected
 }
 
-func dbWrite(command string) error {
-	 // Define the recovery block for bad database writes
-	 var msg string;
+func dbWrite(command string) (string, error) {
+	var msg string
+	var writtenId string
+	err := dbConn.QueryRow(command).Scan(&writtenId)
 
-	resp, err := dbConn.Exec(command)
 	if err != nil {
-		
+
 		msg = fmt.Sprintf("\nDatabase write failed: %v", err)
 		fmt.Printf("%s", msg)
-		return err
+		return writtenId, err
 	}
-	fmt.Printf("%s", resp)
-	// ToDo: Change to switch statement and get data from post
-	msg = "New task write process successful"
-	fmt.Printf("%s", msg)
-	return nil
+
+	fmt.Printf("%s", writtenId)
+
+	fmt.Printf("New task write process successful with id: %s", writtenId)
+	return writtenId, nil
 }
 
-func DbCreateTask(newTask tps.TaskRequest) error {
+func DbCreateTask(newTask tps.TaskRequest) (string, error) {
 	//ToDo: Move uuid generation to auto key generation in table config for postgress DB
 	writeCommand := fmt.Sprintf("INSERT into tasks (task_id, task_body, status) values (uuid_generate_v4(), '%s','%s') RETURNING task_id;", newTask.TaskBody, newTask.Status)
 	fmt.Printf("%s \n", writeCommand)
-	err := dbWrite(writeCommand)
-	fmt.Printf("%+v", err);
-	return err
+	taskId, err := dbWrite(writeCommand)
+	fmt.Printf("%+v", err)
+	return taskId, err
 }
 
 func DbReadRow(taskId string) tps.Task {
@@ -91,12 +91,12 @@ func DbReadRow(taskId string) tps.Task {
 	queryTemplate := "SELECT task_id, task_body, status FROM tasks WHERE task_id=$1"
 	row := dbConn.QueryRow(queryTemplate, taskId)
 	err := row.Scan(&task.TaskId, &task.TaskBody, &task.Status)
-    
+
 	switch err {
 	case sql.ErrNoRows:
 		fmt.Printf("No task with %s found \n", taskId)
 		return noRes
-	case nil: 
+	case nil:
 		// Success case
 		return task
 	default:
@@ -115,10 +115,9 @@ func DbRead(command string) *sql.Rows {
 	return rows
 }
 
-
-	//  defer func() {
-	// 	if r:= recover(); r != nil {
-	// 		msg = fmt.Sprintf("\nDatabase write failed: %v", r)
-	// 		fmt.Printf("%s", msg)
-	// 	}
-	//  }() 
+//  defer func() {
+// 	if r:= recover(); r != nil {
+// 		msg = fmt.Sprintf("\nDatabase write failed: %v", r)
+// 		fmt.Printf("%s", msg)
+// 	}
+//  }()
