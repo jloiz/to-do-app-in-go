@@ -64,9 +64,14 @@ func NewTask(c *fiber.Ctx) error {
 		var newTaskResponse tps.SuccessResponse
 		fmt.Printf("Create new task: %+v\n", newTask)
 		// Need to add exception return for a bad db write
-		db.DbCreateTask(newTask);
+		err = db.DbCreateTask(newTask);
+		if err != nil {
+			newTaskResponse.TaskId = "fail new task"
+			return c.Status(503).JSON(newTaskResponse)
+		}
 		newTaskResponse.TaskId = "Successfully wrote new task" // Todo: change to id of task
 		return c.Status(200).JSON(newTaskResponse)
+		
 	}
 	if err != nil {
 		var errorResponse tps.ErrorResponse

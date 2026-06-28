@@ -25,6 +25,7 @@ func getEnvVariable(key string) string {
 }
 
 func ConnectToDb() bool {
+	//ToDo: Close db conn, recover block needed
 	variables := [5]string{"HOST", "PORT", "USER", "PASSWORD", "DBNAME"}
 	envVarMap := make(map[string]string)
 
@@ -56,33 +57,31 @@ func ConnectToDb() bool {
 	return isConnected
 }
 
-func dbWrite(command string) string {
+func dbWrite(command string) error {
 	 // Define the recovery block for bad database writes
 	 var msg string;
-	 defer func() {
-		if r:= recover(); r != nil {
-			msg = fmt.Sprintf("\nDatabase write failed: %v", r)
-			fmt.Printf("%s", msg)
-		}
-	 }() 
 
 	resp, err := dbConn.Exec(command)
 	if err != nil {
-		panic(err)
+		
+		msg = fmt.Sprintf("\nDatabase write failed: %v", err)
+		fmt.Printf("%s", msg)
+		return err
 	}
 	fmt.Printf("%s", resp)
 	// ToDo: Change to switch statement and get data from post
 	msg = "New task write process successful"
-	return msg
+	fmt.Printf("%s", msg)
+	return nil
 }
 
-func DbCreateTask(newTask tps.TaskRequest) string {
+func DbCreateTask(newTask tps.TaskRequest) error {
 	//ToDo: add the quotes arount the values
 	writeCommand := fmt.Sprintf("INSERT into tasks (task_id, task_body, status) values (uuid_generate_v4(), %s, %s);", newTask.TaskBody, newTask.Status)
 	fmt.Printf("%s", writeCommand)
-	response := dbWrite(writeCommand)
-	fmt.Printf("%+v", response);
-	return response
+	err := dbWrite(writeCommand)
+	fmt.Printf("%+v", err);
+	return err
 }
 
 func DbReadRow(taskId string) tps.Task {
@@ -115,3 +114,11 @@ func DbRead(command string) *sql.Rows {
 	defer fmt.Sprint(rows)
 	return rows
 }
+
+
+	//  defer func() {
+	// 	if r:= recover(); r != nil {
+	// 		msg = fmt.Sprintf("\nDatabase write failed: %v", r)
+	// 		fmt.Printf("%s", msg)
+	// 	}
+	//  }() 
