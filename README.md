@@ -12,3 +12,6 @@ Utilitises:
 
 - Install a postgres instance
 - Define credentials in .env
+
+## ToDo:
+- Add shell scirpt to configure postgres and .env for client

@@ -76,9 +76,9 @@ func dbWrite(command string) error {
 }
 
 func DbCreateTask(newTask tps.TaskRequest) error {
-	//ToDo: add the quotes arount the values
-	writeCommand := fmt.Sprintf("INSERT into tasks (task_id, task_body, status) values (uuid_generate_v4(), %s, %s);", newTask.TaskBody, newTask.Status)
-	fmt.Printf("%s", writeCommand)
+	//ToDo: Move uuid generation to auto key generation in table config for postgress DB
+	writeCommand := fmt.Sprintf("INSERT into tasks (task_id, task_body, status) values (uuid_generate_v4(), '%s','%s') RETURNING task_id;", newTask.TaskBody, newTask.Status)
+	fmt.Printf("%s \n", writeCommand)
 	err := dbWrite(writeCommand)
 	fmt.Printf("%+v", err);
 	return err

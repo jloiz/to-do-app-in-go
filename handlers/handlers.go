@@ -72,7 +72,7 @@ func NewTask(c *fiber.Ctx) error {
 	fmt.Printf("Create new task: %+v\n", newTask)
 	err = db.DbCreateTask(newTask)
 	if err != nil {
-		newTaskResponse.Error = fmt.Sprintf("Failed to write to database with error: %s", err)
+		newTaskResponse.Error = fmt.Sprintf("Failed to write to database with error: %s\n", err)
 		return c.Status(503).JSON(newTaskResponse)
 	}
 	newTaskResponse.TaskId = "Successfully wrote new task" // Todo: change to id of task
