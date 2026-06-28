@@ -19,9 +19,9 @@ type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
-// type WriteTaskResponse struct {
-// 	// ToDo: change to versionedUUid/UUid
-// 	TaskID string `json:"taskId,omitempty"`
-// 	Error string `json:"error,omitempty"`
-// }
+type WriteTaskResponse struct {
+	// ToDo: change to UUid
+	TaskId string `json:"taskId,omitempty"`
+	Error string `json:"error,omitempty"`
+}
 

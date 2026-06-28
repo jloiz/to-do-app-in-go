@@ -5,8 +5,8 @@ import (
 	"to-do-app-in-go/db"
 	tps "to-do-app-in-go/types"
 
-	"github.com/gofiber/fiber/v2"
 	"encoding/json"
+	"github.com/gofiber/fiber/v2"
 )
 
 func Greeting() string {
@@ -34,8 +34,8 @@ func GetTask(c *fiber.Ctx) error {
 	if dbRes.TaskId != "" {
 		return c.JSON(dbRes)
 	} else {
-		// Define here so only use mem if an error 
-		var  dbError tps.ErrorResponse
+		// Define here so only use mem if an error
+		var dbError tps.ErrorResponse
 		dbError.Error = fmt.Sprintf("No record of task with ID %s found", c.Params("task"))
 
 		return c.Status(400).JSON(dbError)
@@ -56,32 +56,28 @@ func NewTask(c *fiber.Ctx) error {
 
 	taskReqStr := fmt.Sprintf("%s", taskReq)
 	fmt.Printf("Recieved write request for task: \n %s", taskReqStr)
-	
-	var newTask tps.TaskRequest;
 
-	err := json.Unmarshal([]byte(taskReq), &newTask) 
-	if err == nil {
-		var newTaskResponse tps.SuccessResponse
-		fmt.Printf("Create new task: %+v\n", newTask)
-		// Need to add exception return for a bad db write
-		err = db.DbCreateTask(newTask);
-		if err != nil {
-			newTaskResponse.TaskId = "fail new task"
-			return c.Status(503).JSON(newTaskResponse)
-		}
-		newTaskResponse.TaskId = "Successfully wrote new task" // Todo: change to id of task
-		return c.Status(200).JSON(newTaskResponse)
-		
-	}
+	var newTask tps.TaskRequest
+
+	err := json.Unmarshal([]byte(taskReq), &newTask)
+
 	if err != nil {
 		var errorResponse tps.ErrorResponse
 		fmt.Printf("Invalid format for new task. New tasks must contain taskBody and status only.")
-		errorResponse.Error = "Unexcpected error parsing new task"
-		return c.Status(500).JSON(errorResponse)
+		errorResponse.Error = "Unexpected error parsing new task, New tasks must contain taskBody and status only"
+		return c.Status(422).JSON(errorResponse)
 	}
-	var errorResponse tps.ErrorResponse;
-	errorResponse.Error = "Unexcpected error writing new task"
-	return c.Status(500).JSON(errorResponse)
+
+	var newTaskResponse tps.WriteTaskResponse
+	fmt.Printf("Create new task: %+v\n", newTask)
+	err = db.DbCreateTask(newTask)
+	if err != nil {
+		newTaskResponse.Error = fmt.Sprintf("Failed to write to database with error: %s", err)
+		return c.Status(503).JSON(newTaskResponse)
+	}
+	newTaskResponse.TaskId = "Successfully wrote new task" // Todo: change to id of task
+	return c.Status(200).JSON(newTaskResponse)
+
 }
 
 func DeleteTask(c *fiber.Ctx) error {
