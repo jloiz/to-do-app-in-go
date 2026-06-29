@@ -3,17 +3,25 @@ package handlers
 import (
 	"fmt"
 	"strings"
+
 	"to-do-app-in-go/db"
+	"to-do-app-in-go/utils"
+
 	hlp "to-do-app-in-go/helpers"
 	tps "to-do-app-in-go/types"
-
-	"encoding/json"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 // Globally available request status constant
-var ValidStatuses = []interface{}{"PENDING", "IN_PROGRESS" ,"COMPLETE", "CANCELLED"}
+var ValidStatuses = []interface{}{"PENDING", "IN_PROGRESS", "COMPLETE", "CANCELLED"}
+
+// Common vars
+var (
+	newTask         tps.TaskRequest
+	taskId          string
+	newTaskResponse tps.WriteTaskResponse
+)
 
 func Greeting() string {
 	var greetingStr string
@@ -26,14 +34,7 @@ func Initialise(c *fiber.Ctx) error {
 	return c.SendString(greeting)
 }
 
-func GetAllTasks(c *fiber.Ctx) error {
-
-	// This one is broken
-	queryStr := "SELECT * FROM tasks"
-	result := db.DbRead(queryStr)
-	fmt.Sprint(result)
-	return c.SendString("All tasks")
-}
+////// GETs  //////
 
 func GetTask(c *fiber.Ctx) error {
 	dbRes := db.DbReadRow(c.Params("task"))
@@ -48,54 +49,63 @@ func GetTask(c *fiber.Ctx) error {
 	}
 }
 
-func UpdateTask(c *fiber.Ctx) error {
-	return c.SendString("Update task")
+func GetAllTasks(c *fiber.Ctx) error {
+
+	// This one is broken
+	queryStr := "SELECT * FROM tasks"
+	result := db.DbRead(queryStr)
+	fmt.Sprint(result)
+	return c.SendString("All tasks")
 }
 
-func NewTask(c *fiber.Ctx) error {
+////// POSTs  //////
 
+func NewTask(c *fiber.Ctx) error {
 	taskReq := c.Body()
 
-	var (
-		newTask         tps.TaskRequest
-		taskId          string
-		newTaskResponse tps.WriteTaskResponse
-	)
-
-	taskReqStr := fmt.Sprintf("%s", taskReq)
-	fmt.Printf("Recieved write request for task: \n %s\n", taskReqStr)
-
-	err := json.Unmarshal([]byte(taskReq), &newTask)
-	fmt.Printf("Create new task: %+v\n", newTask)
-
+	newTask, err := utils.ParseRequest(taskReq)
 	if err != nil {
-		var errorResponse tps.ErrorResponse
-		fmt.Printf("Invalid format for new task. New tasks must contain taskBody and status only.")
-		errorResponse.Error = "Unexpected error parsing new task, New tasks must contain taskBody and status only"
-		return c.Status(422).JSON(errorResponse)
+		fmt.Printf("Unexpected error parsing new task, New tasks must contain taskBody and status only: %v", err)
+		return c.Status(422).JSON(tps.ErrorResponse{
+			Error: fmt.Sprintf("Unexpected error parsing new task, New tasks must contain taskBody and status only: %v", err),
+		})
 	}
 
+	fmt.Printf("Create new task: %+v\n", newTask)
 
+	// To util -
 	// Up case status field for DB consistency
 	newTask.Status = strings.ToUpper(newTask.Status)
 	// Validate status field (don't upcase check as redundant due to previous step):
 	if hlp.FindInArray(newTask.Status, ValidStatuses) == -1 {
-		newTaskResponse.Error = fmt.Sprintf("Invalid status. Status must be one of: %v", ValidStatuses)
-		fmt.Printf("%s\n", newTaskResponse.Error)
-		return c.Status(400).JSON(newTaskResponse)
+		fmt.Printf("Invalid status. Status must be one of: %v", ValidStatuses)
+		return c.Status(400).JSON(tps.ErrorResponse{
+			Error: fmt.Sprintf("Invalid status. Status must be one of: %v", ValidStatuses),
+		})
 	}
 
 	// Write to db
 	taskId, err = db.DbCreateTask(newTask)
 
 	if err != nil {
-		newTaskResponse.Error = fmt.Sprintf("Failed to write to database with error: %s\n", err)
-		return c.Status(503).JSON(newTaskResponse)
+		fmt.Printf("Error performing write to database: %v", err)
+		return c.Status(503).JSON(tps.ErrorResponse{
+			Error: fmt.Sprintf("Error performing write to database: %v", err),
+		})
 	}
 
-	newTaskResponse.TaskId = taskId 
+	newTaskResponse.TaskId = taskId
 	return c.Status(200).JSON(newTaskResponse)
 
+}
+
+func UpdateTask(c *fiber.Ctx) error {
+
+	newTaskReq := c.Body()
+
+	newTaskReqStr := fmt.Sprintf("%s", newTaskReq)
+	fmt.Printf("Recieved write request for task: \n %s\n", newTaskReqStr)
+	return c.SendString("Update task")
 }
 
 func DeleteTask(c *fiber.Ctx) error {
