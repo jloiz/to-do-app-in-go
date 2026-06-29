@@ -2,12 +2,18 @@ package handlers
 
 import (
 	"fmt"
+	"strings"
 	"to-do-app-in-go/db"
+	hlp "to-do-app-in-go/helpers"
 	tps "to-do-app-in-go/types"
 
 	"encoding/json"
+
 	"github.com/gofiber/fiber/v2"
 )
+
+// Globally available request status constant
+var ValidStatuses = []interface{}{"PENDING", "IN_PROGRESS" ,"COMPLETE", "CANCELLED"}
 
 func Greeting() string {
 	var greetingStr string
@@ -48,19 +54,19 @@ func UpdateTask(c *fiber.Ctx) error {
 
 func NewTask(c *fiber.Ctx) error {
 
-	//ToDo: Refactor into helpers
-
 	taskReq := c.Body()
 
-	// ToDo: Need to add request validation here
+	var (
+		newTask         tps.TaskRequest
+		taskId          string
+		newTaskResponse tps.WriteTaskResponse
+	)
 
 	taskReqStr := fmt.Sprintf("%s", taskReq)
 	fmt.Printf("Recieved write request for task: \n %s\n", taskReqStr)
 
-	var newTask tps.TaskRequest
-	var taskId string;
-
 	err := json.Unmarshal([]byte(taskReq), &newTask)
+	fmt.Printf("Create new task: %+v\n", newTask)
 
 	if err != nil {
 		var errorResponse tps.ErrorResponse
@@ -69,14 +75,25 @@ func NewTask(c *fiber.Ctx) error {
 		return c.Status(422).JSON(errorResponse)
 	}
 
-	var newTaskResponse tps.WriteTaskResponse
-	fmt.Printf("Create new task: %+v\n", newTask)
+
+	// Up case status field for DB consistency
+	newTask.Status = strings.ToUpper(newTask.Status)
+	// Validate status field (don't upcase check as redundant due to previous step):
+	if hlp.FindInArray(newTask.Status, ValidStatuses) == -1 {
+		newTaskResponse.Error = fmt.Sprintf("Invalid status. Status must be one of: %v", ValidStatuses)
+		fmt.Printf("%s\n", newTaskResponse.Error)
+		return c.Status(400).JSON(newTaskResponse)
+	}
+
+	// Write to db
 	taskId, err = db.DbCreateTask(newTask)
+
 	if err != nil {
 		newTaskResponse.Error = fmt.Sprintf("Failed to write to database with error: %s\n", err)
 		return c.Status(503).JSON(newTaskResponse)
 	}
-	newTaskResponse.TaskId = taskId // Todo: change to id of task
+
+	newTaskResponse.TaskId = taskId 
 	return c.Status(200).JSON(newTaskResponse)
 
 }
