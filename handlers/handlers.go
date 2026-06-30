@@ -10,14 +10,14 @@ import (
 	tps "to-do-app-in-go/types"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
+
 )
 
 // Globally available request status constant
 
 // Common vars
 var (
-	newTask         tps.TaskRequest
-	taskId          string
 	newTaskResponse tps.WriteTaskResponse
 )
 
@@ -83,7 +83,7 @@ func NewTask(c *fiber.Ctx) error {
 	}
 
 	// Write to db
-	taskId, err = db.DbCreateTask(newTask)
+	taskId, err := db.DbCreateTask(newTask)
 
 	if err != nil {
 		fmt.Printf("Error performing write to database: %v", err)
@@ -99,11 +99,40 @@ func NewTask(c *fiber.Ctx) error {
 
 func UpdateTask(c *fiber.Ctx) error {
 
-	newTaskReq := c.Body()
+	updateTaskReq := c.Body()
+	taskId := c.Params("task")
 
-	newTaskReqStr := fmt.Sprintf("%s", newTaskReq)
-	fmt.Printf("Recieved write request for task: \n %s\n", newTaskReqStr)
-	return c.SendString("Update task")
+	err := uuid.Validate(taskId)
+	if err != nil {
+		return c.Status(400).JSON(tps.ErrorResponse{
+			Error: fmt.Sprintf("%s is not a valid taskId. taskIds are uuids", taskId),
+		})
+	}
+
+	updateTask, err := utils.ParseRequest(updateTaskReq)
+	if err != nil {
+		fmt.Printf("Unexpected error parsing new task, tasks must contain taskBody and status only: %v", err)
+		return c.Status(422).JSON(tps.ErrorResponse{
+			Error: fmt.Sprintf("Unexpected error parsing update task, tasks must contain taskBody and status only: %v", err),
+		})
+	}
+
+	fmt.Printf("Updating task %s with body: \n %+v\n", taskId, updateTask)
+
+	// Up case status field for DB consistency
+	updateTask.Status = strings.ToUpper(updateTask.Status)
+
+	err = utils.ValidateRequest(updateTask)
+	if err != nil {
+		fmt.Printf("Error validating request: %v", err)
+		return c.Status(400).JSON(tps.ErrorResponse{
+			Error: fmt.Sprintf("Error validating request: %v", err),
+		})
+	}
+
+	// ToDo: Add db update here
+
+	return c.SendString(taskId)
 }
 
 func DeleteTask(c *fiber.Ctx) error {
