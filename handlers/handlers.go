@@ -7,14 +7,12 @@ import (
 	"to-do-app-in-go/db"
 	"to-do-app-in-go/utils"
 
-	hlp "to-do-app-in-go/helpers"
 	tps "to-do-app-in-go/types"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 // Globally available request status constant
-var ValidStatuses = []interface{}{"PENDING", "IN_PROGRESS", "COMPLETE", "CANCELLED"}
 
 // Common vars
 var (
@@ -73,14 +71,14 @@ func NewTask(c *fiber.Ctx) error {
 
 	fmt.Printf("Create new task: %+v\n", newTask)
 
-	// To util -
 	// Up case status field for DB consistency
 	newTask.Status = strings.ToUpper(newTask.Status)
-	// Validate status field (don't upcase check as redundant due to previous step):
-	if hlp.FindInArray(newTask.Status, ValidStatuses) == -1 {
-		fmt.Printf("Invalid status. Status must be one of: %v", ValidStatuses)
+
+	err = utils.ValidateRequest(newTask)
+	if err != nil {
+		fmt.Printf("Error validating request: %v", err)
 		return c.Status(400).JSON(tps.ErrorResponse{
-			Error: fmt.Sprintf("Invalid status. Status must be one of: %v", ValidStatuses),
+			Error: fmt.Sprintf("Error validating request: %v", err),
 		})
 	}
 

@@ -4,7 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	tps "to-do-app-in-go/types"
+	hlp "to-do-app-in-go/helpers"
+	cnsts "to-do-app-in-go/constants"
 )
+
 
 func ParseRequest(rawRequest []byte) (tps.TaskRequest, error) {
 	var parsedRequest tps.TaskRequest
@@ -17,4 +20,12 @@ func ParseRequest(rawRequest []byte) (tps.TaskRequest, error) {
 	}
 
 	return parsedRequest, nil
+}
+
+func ValidateRequest(request tps.TaskRequest) error {
+		if hlp.FindInArray(request.Status, cnsts.ValidStatuses) == -1 {
+		fmt.Printf("Invalid status. Status must be one of: %v", cnsts.ValidStatuses)
+		return fmt.Errorf("Invalid status. Status must be one of: %v", cnsts.ValidStatuses)
+	}
+	return nil
 }
