@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"log"
 
 	"github.com/gofiber/fiber/v2"
 	"to-do-app-in-go/db"
@@ -9,6 +11,8 @@ import (
 )
 
 func main() {
+	log.SetOutput(os.Stdout)
+
 	connectionStatus := db.ConnectToDb()
 	fmt.Printf("Connection: %t \n", connectionStatus)
 

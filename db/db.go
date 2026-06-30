@@ -4,25 +4,15 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"os"
 
-	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 
 	tps "to-do-app-in-go/types"
+	hlp "to-do-app-in-go/helpers"
 )
 
 // Global database connection ptr
 var dbConn *sql.DB
-
-func getEnvVariable(key string) string {
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatalf("Unable to fetch environment variable: %s", key)
-	}
-
-	return os.Getenv(key)
-}
 
 func ConnectToDb() bool {
 	//ToDo: Close db conn, recover block needed
@@ -30,7 +20,7 @@ func ConnectToDb() bool {
 	envVarMap := make(map[string]string)
 
 	for _, envVar := range variables {
-		buff := getEnvVariable(envVar)
+		buff := hlp.GetEnvVariable(envVar)
 		envVarMap[envVar] = buff
 	}
 
@@ -52,7 +42,7 @@ func ConnectToDb() bool {
 		isConnected = true
 	}
 
-	fmt.Printf("Connected to database successfully\n")
+	log.Printf("Connected to database successfully\n")
 
 	return isConnected
 }
@@ -65,26 +55,24 @@ func dbWrite(command string) (string, error) {
 	if err != nil {
 
 		msg = fmt.Sprintf("\nDatabase write failed: %v", err)
-		fmt.Printf("%s", msg)
+		log.Printf("%s", msg)
 		return writtenId, err
 	}
 
-	fmt.Printf("%s", writtenId)
-
-	fmt.Printf("New task write process successful with id: %s", writtenId)
+	log.Printf("New task write process successful with id: %s", writtenId)
 	return writtenId, nil
 }
 
 func DbCreateTask(newTask tps.TaskRequest) (string, error) {
 	//ToDo: Move uuid generation to auto key generation in table config for postgress DB
 	writeCommand := fmt.Sprintf("INSERT into tasks (task_id, task_body, status) values (uuid_generate_v4(), '%s','%s') RETURNING task_id;", newTask.TaskBody, newTask.Status)
-	fmt.Printf("%s \n", writeCommand)
+	log.Printf("%s \n", writeCommand)
 	taskId, err := dbWrite(writeCommand)
-	fmt.Printf("%+v", err)
+	log.Printf("%+v", err)
 	return taskId, err
 }
 
-func DbReadRow(taskId string) tps.Task {
+func DbReadRow(taskId string) (tps.Task, error) {
 	var task tps.Task
 	var noRes tps.Task
 
@@ -94,13 +82,13 @@ func DbReadRow(taskId string) tps.Task {
 
 	switch err {
 	case sql.ErrNoRows:
-		fmt.Printf("No task with %s found \n", taskId)
-		return noRes
+		log.Printf("No task with %s found \n", taskId)
+		return noRes, err
 	case nil:
 		// Success case
-		return task
+		return task, err
 	default:
-		panic(err)
+		return noRes, err
 	}
 }
 
@@ -115,9 +103,4 @@ func DbRead(command string) *sql.Rows {
 	return rows
 }
 
-//  defer func() {
-// 	if r:= recover(); r != nil {
-// 		msg = fmt.Sprintf("\nDatabase write failed: %v", r)
-// 		fmt.Printf("%s", msg)
-// 	}
-//  }()
+

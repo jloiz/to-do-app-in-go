@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	tps "to-do-app-in-go/types"
 	hlp "to-do-app-in-go/helpers"
 	cnsts "to-do-app-in-go/constants"
@@ -12,7 +13,7 @@ import (
 func ParseRequest(rawRequest []byte) (tps.TaskRequest, error) {
 	var parsedRequest tps.TaskRequest
 	taskReqStr := fmt.Sprintf("%s", rawRequest)
-	fmt.Printf("Parsing request: \n %s\n", taskReqStr)
+	log.Printf("Parsing request: \n %s\n", taskReqStr)
 	err := json.Unmarshal([]byte(rawRequest), &parsedRequest)
 
 	if err != nil {
@@ -24,7 +25,7 @@ func ParseRequest(rawRequest []byte) (tps.TaskRequest, error) {
 
 func ValidateRequest(request tps.TaskRequest) error {
 		if hlp.FindInArray(request.Status, cnsts.ValidStatuses) == -1 {
-		fmt.Printf("Invalid status. Status must be one of: %v", cnsts.ValidStatuses)
+		log.Printf("Invalid status. Status must be one of: %v", cnsts.ValidStatuses)
 		return fmt.Errorf("Invalid status. Status must be one of: %v", cnsts.ValidStatuses)
 	}
 	return nil

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"to-do-app-in-go/db"
@@ -11,7 +12,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-
 )
 
 // Globally available request status constant
@@ -35,16 +35,17 @@ func Initialise(c *fiber.Ctx) error {
 ////// GETs  //////
 
 func GetTask(c *fiber.Ctx) error {
-	dbRes := db.DbReadRow(c.Params("task"))
-	if dbRes.TaskId != "" {
-		return c.JSON(dbRes)
-	} else {
-		// Define here so only use mem if an error
-		var dbError tps.ErrorResponse
-		dbError.Error = fmt.Sprintf("No record of task with ID %s found", c.Params("task"))
+	// ToDo add uuid validation
+	dbRes, err := db.DbReadRow(c.Params("task"))
 
-		return c.Status(400).JSON(dbError)
+	if err != nil {
+		log.Printf("No record of task with ID %s found", c.Params("task"))
+		return c.Status(400).JSON(tps.ErrorResponse{
+			Error: fmt.Sprintf("No record of task with ID %s found", c.Params("task")),
+		})
 	}
+	return c.JSON(dbRes)
+
 }
 
 func GetAllTasks(c *fiber.Ctx) error {
@@ -63,20 +64,20 @@ func NewTask(c *fiber.Ctx) error {
 
 	newTask, err := utils.ParseRequest(taskReq)
 	if err != nil {
-		fmt.Printf("Unexpected error parsing new task, New tasks must contain taskBody and status only: %v", err)
+		log.Printf("Unexpected error parsing new task, New tasks must contain taskBody and status only: %v", err)
 		return c.Status(422).JSON(tps.ErrorResponse{
 			Error: fmt.Sprintf("Unexpected error parsing new task, New tasks must contain taskBody and status only: %v", err),
 		})
 	}
 
-	fmt.Printf("Create new task: %+v\n", newTask)
+	log.Printf("Create new task: %+v\n", newTask)
 
 	// Up case status field for DB consistency
 	newTask.Status = strings.ToUpper(newTask.Status)
 
 	err = utils.ValidateRequest(newTask)
 	if err != nil {
-		fmt.Printf("Error validating request: %v", err)
+		log.Printf("Error validating request: %v", err)
 		return c.Status(400).JSON(tps.ErrorResponse{
 			Error: fmt.Sprintf("Error validating request: %v", err),
 		})
@@ -86,12 +87,13 @@ func NewTask(c *fiber.Ctx) error {
 	taskId, err := db.DbCreateTask(newTask)
 
 	if err != nil {
-		fmt.Printf("Error performing write to database: %v", err)
+		log.Printf("Error performing write to database: %v", err)
 		return c.Status(503).JSON(tps.ErrorResponse{
 			Error: fmt.Sprintf("Error performing write to database: %v", err),
 		})
 	}
 
+	log.Printf("Successfully wrote task with ID: %s\n", taskId)
 	newTaskResponse.TaskId = taskId
 	return c.Status(200).JSON(newTaskResponse)
 
@@ -111,20 +113,20 @@ func UpdateTask(c *fiber.Ctx) error {
 
 	updateTask, err := utils.ParseRequest(updateTaskReq)
 	if err != nil {
-		fmt.Printf("Unexpected error parsing new task, tasks must contain taskBody and status only: %v", err)
+		log.Printf("Unexpected error parsing update task, tasks must contain taskBody and status only: %v", err)
 		return c.Status(422).JSON(tps.ErrorResponse{
 			Error: fmt.Sprintf("Unexpected error parsing update task, tasks must contain taskBody and status only: %v", err),
 		})
 	}
 
-	fmt.Printf("Updating task %s with body: \n %+v\n", taskId, updateTask)
+	log.Printf("Updating task %s with body: \n %+v\n", taskId, updateTask)
 
 	// Up case status field for DB consistency
 	updateTask.Status = strings.ToUpper(updateTask.Status)
 
 	err = utils.ValidateRequest(updateTask)
 	if err != nil {
-		fmt.Printf("Error validating request: %v", err)
+		log.Printf("Error validating request: %v", err)
 		return c.Status(400).JSON(tps.ErrorResponse{
 			Error: fmt.Sprintf("Error validating request: %v", err),
 		})
@@ -134,6 +136,8 @@ func UpdateTask(c *fiber.Ctx) error {
 
 	return c.SendString(taskId)
 }
+
+////// DELETEs  //////
 
 func DeleteTask(c *fiber.Ctx) error {
 	return c.SendString("Delete Task")
